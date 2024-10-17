@@ -2,10 +2,11 @@
 
 import React from 'react';
 import MapView from './MapView';
+import './App.css'; // Ensure you import your CSS for styling
 
 function App() {
   return (
-    <div style={{ height: '100vh', margin: 0 }}>
+    <div id="root">
       <MapView />
     </div>
   );

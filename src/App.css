@@ -1,7 +1,6 @@
 /* src/App.css */
 
 #root {
-  /* Remove max-width and padding to allow full-width layout */
   margin: 0 auto;
   height: 100%;
 }
@@ -15,7 +14,7 @@
   width: 25%;
   padding: 20px;
   box-sizing: border-box;
-  background-color: #1a1a1a; /* Dark background for the side panel */
+  background-color: #1a1a1a;
 }
 
 .map-container {
@@ -81,5 +80,3 @@ li button {
 li button:hover {
   background-color: #646cff;
 }
-
-/* Retain other styles you had */

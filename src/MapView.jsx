@@ -12,21 +12,16 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Fix Leaflet's default icon paths
+delete L.Icon.Default.prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
 
-// Custom icons for start and end markers (small red dots)
-const startIcon = new L.Icon({
-  iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
-  iconSize: [15, 15],
-  iconAnchor: [7.5, 7.5],
-  popupAnchor: [0, -5],
-});
-
-const endIcon = new L.Icon({
+// Custom icon for markers (small red dot)
+const customIcon = new L.Icon({
   iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/RedDot.svg',
   iconSize: [15, 15],
   iconAnchor: [7.5, 7.5],
@@ -153,18 +148,10 @@ const MapView = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', margin: 0 }}>
+    <div className="container">
       {/* Side Panel for Adding or Editing Shipments */}
-      <div style={{ flex: '0 0 25%', padding: '20px', boxSizing: 'border-box' }}>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            textAlign: 'left',
-          }}
-        >
+      <div className="side-panel">
+        <form onSubmit={handleSubmit} className="form">
           <h3>{editingShipment ? 'Edit Shipment' : 'Add Shipment'}</h3>
           <label>
             Shipment ID:
@@ -246,7 +233,7 @@ const MapView = () => {
       </div>
 
       {/* Map Display */}
-      <div style={{ flex: '1', height: '100%' }}>
+      <div className="map-container">
         <MapContainer
           center={[51.505, -0.09]}
           zoom={2}
@@ -260,12 +247,10 @@ const MapView = () => {
 
           {shipments.map((shipment) => (
             <React.Fragment key={shipment.id}>
+              {/* Start Marker */}
               <Marker
-                position={[
-                  shipment.startLocation.lat,
-                  shipment.startLocation.lng,
-                ]}
-                icon={startIcon}
+                position={[shipment.startLocation.lat, shipment.startLocation.lng]}
+                icon={customIcon}
               >
                 <Popup>
                   <strong>Shipment ID:</strong> {shipment.id}
@@ -280,12 +265,10 @@ const MapView = () => {
                 </Popup>
               </Marker>
 
+              {/* End Marker */}
               <Marker
-                position={[
-                  shipment.endLocation.lat,
-                  shipment.endLocation.lng,
-                ]}
-                icon={endIcon}
+                position={[shipment.endLocation.lat, shipment.endLocation.lng]}
+                icon={customIcon}
               >
                 <Popup>
                   <strong>Shipment ID:</strong> {shipment.id}
@@ -300,6 +283,7 @@ const MapView = () => {
                 </Popup>
               </Marker>
 
+              {/* Polyline */}
               <Polyline
                 positions={[
                   [shipment.startLocation.lat, shipment.startLocation.lng],
