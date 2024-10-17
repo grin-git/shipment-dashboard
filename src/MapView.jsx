@@ -41,6 +41,13 @@ const MapView = () => {
   });
   const [editingShipment, setEditingShipment] = useState(null);
 
+  const [showShipments, setShowShipments] = useState(true); // For collapsing the shipments list
+
+  // State variables for filters
+  const [filterServiceType, setFilterServiceType] = useState('');
+  const [filterPersonnel, setFilterPersonnel] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
   const mapRef = useRef(null);
 
   // Handle form changes, including nested objects
@@ -147,6 +154,18 @@ const MapView = () => {
     setEditingShipment(shipmentToEdit);
   };
 
+  // Filter shipments based on filters and search term
+  const filteredShipments = shipments.filter((shipment) => {
+    const matchesServiceType = filterServiceType
+      ? shipment.serviceType === filterServiceType
+      : true;
+    const matchesPersonnel = filterPersonnel
+      ? shipment.personnel === filterPersonnel
+      : true;
+    const matchesSearchTerm = shipment.id.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesServiceType && matchesPersonnel && matchesSearchTerm;
+  });
+
   return (
     <div className="container">
       {/* Side Panel for Adding or Editing Shipments */}
@@ -220,16 +239,70 @@ const MapView = () => {
           </button>
         </form>
 
-        <h3>Shipments</h3>
-        <ul>
-          {shipments.map((shipment) => (
-            <li key={shipment.id}>
-              {shipment.id}{' '}
-              <button onClick={() => handleEdit(shipment.id)}>Edit</button>{' '}
-              <button onClick={() => handleDelete(shipment.id)}>Delete</button>
-            </li>
-          ))}
-        </ul>
+        {/* Collapsible Shipments List */}
+        <h3
+          className="collapsible-header"
+          onClick={() => setShowShipments(!showShipments)}
+          style={{ cursor: 'pointer' }}
+        >
+          Shipments {showShipments ? '▲' : '▼'}
+        </h3>
+
+        {showShipments && (
+          <>
+            {/* Filters */}
+            <div className="filter-section">
+              <h4>Filters</h4>
+              <label>
+                Service Type:
+                <select
+                  value={filterServiceType}
+                  onChange={(e) => setFilterServiceType(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="One-way OBC">One-way OBC</option>
+                  <option value="Airfreight">Airfreight</option>
+                  <option value="Trainfreight">Trainfreight</option>
+                  <option value="Direct drive">Direct drive</option>
+                </select>
+              </label>
+
+              <label>
+                Personnel:
+                <select
+                  value={filterPersonnel}
+                  onChange={(e) => setFilterPersonnel(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="L C">L C</option>
+                  <option value="S M">S M</option>
+                  <option value="S D">S D</option>
+                </select>
+              </label>
+
+              <label>
+                Search Shipments:
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Enter shipment ID"
+                />
+              </label>
+            </div>
+
+            {/* Shipments List */}
+            <ul className="shipments-list">
+              {filteredShipments.map((shipment) => (
+                <li key={shipment.id}>
+                  {shipment.id}{' '}
+                  <button onClick={() => handleEdit(shipment.id)}>Edit</button>{' '}
+                  <button onClick={() => handleDelete(shipment.id)}>Delete</button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
 
       {/* Map Display */}
@@ -245,7 +318,7 @@ const MapView = () => {
             attribution="&copy; OpenStreetMap contributors"
           />
 
-          {shipments.map((shipment) => (
+          {filteredShipments.map((shipment) => (
             <React.Fragment key={shipment.id}>
               {/* Start Marker */}
               <Marker

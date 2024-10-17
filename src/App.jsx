@@ -2,7 +2,7 @@
 
 import React from 'react';
 import MapView from './MapView';
-import './App.css'; // Ensure you import your CSS for styling
+import './App.css'; // Import your CSS for styling
 
 function App() {
   return (
