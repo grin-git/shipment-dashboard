@@ -1,6 +1,6 @@
 // src/MapView.jsx
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,10 +28,13 @@ const customIcon = new L.Icon({
   popupAnchor: [0, -5],
 });
 
-const initialShipments = [];
-
 const MapView = () => {
-  const [shipments, setShipments] = useState(initialShipments);
+  const [shipments, setShipments] = useState(() => {
+    // Load shipments from local storage if available
+    const savedShipments = localStorage.getItem('shipments');
+    return savedShipments ? JSON.parse(savedShipments) : [];
+  });
+
   const [formData, setFormData] = useState({
     id: '',
     startLocation: { name: '', lat: '', lng: '' },
@@ -49,6 +52,11 @@ const MapView = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const mapRef = useRef(null);
+
+  // Save shipments to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('shipments', JSON.stringify(shipments));
+  }, [shipments]);
 
   // Handle form changes, including nested objects
   const handleFormChange = (e) => {
