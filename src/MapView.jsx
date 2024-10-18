@@ -6,6 +6,17 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 
+// Import Firebase functions
+import { db } from './firebase';
+import {
+  collection,
+  onSnapshot,
+  doc,
+  setDoc,
+  deleteDoc,
+  getDoc,
+} from 'firebase/firestore';
+
 // Import Leaflet images
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -29,11 +40,7 @@ const customIcon = new L.Icon({
 });
 
 const MapView = () => {
-  const [shipments, setShipments] = useState(() => {
-    // Load shipments from local storage if available
-    const savedShipments = localStorage.getItem('shipments');
-    return savedShipments ? JSON.parse(savedShipments) : [];
-  });
+  const [shipments, setShipments] = useState([]);
 
   const [formData, setFormData] = useState({
     id: '',
@@ -53,10 +60,16 @@ const MapView = () => {
 
   const mapRef = useRef(null);
 
-  // Save shipments to local storage whenever they change
+  // Fetch shipments from Firebase
   useEffect(() => {
-    localStorage.setItem('shipments', JSON.stringify(shipments));
-  }, [shipments]);
+    const shipmentsCollection = collection(db, 'shipments');
+    const unsubscribe = onSnapshot(shipmentsCollection, (snapshot) => {
+      const shipmentsData = snapshot.docs.map((doc) => doc.data());
+      setShipments(shipmentsData);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Handle form changes, including nested objects
   const handleFormChange = (e) => {
@@ -129,37 +142,48 @@ const MapView = () => {
       },
     };
 
-    if (editingShipment) {
-      const updatedShipments = shipments.map((shipment) =>
-        shipment.id === editingShipment.id ? newShipment : shipment
-      );
-      setShipments(updatedShipments);
+    try {
+      const shipmentDoc = doc(db, 'shipments', newShipment.id);
+      await setDoc(shipmentDoc, newShipment);
       setEditingShipment(null);
-    } else {
-      setShipments([...shipments, newShipment]);
-    }
 
-    // Reset form
-    setFormData({
-      id: '',
-      startLocation: { name: '', lat: '', lng: '' },
-      endLocation: { name: '', lat: '', lng: '' },
-      serviceType: 'One-way OBC',
-      personnel: 'L C',
-    });
+      // Reset form
+      setFormData({
+        id: '',
+        startLocation: { name: '', lat: '', lng: '' },
+        endLocation: { name: '', lat: '', lng: '' },
+        serviceType: 'One-way OBC',
+        personnel: 'L C',
+      });
+    } catch (error) {
+      console.error('Error adding or updating shipment:', error);
+    }
   };
 
   // Handle deleting a shipment
-  const handleDelete = (id) => {
-    const updatedShipments = shipments.filter((shipment) => shipment.id !== id);
-    setShipments(updatedShipments);
+  const handleDelete = async (id) => {
+    try {
+      const shipmentDoc = doc(db, 'shipments', id);
+      await deleteDoc(shipmentDoc);
+    } catch (error) {
+      console.error('Error deleting shipment:', error);
+    }
   };
 
   // Handle editing a shipment
-  const handleEdit = (id) => {
-    const shipmentToEdit = shipments.find((shipment) => shipment.id === id);
-    setFormData(shipmentToEdit);
-    setEditingShipment(shipmentToEdit);
+  const handleEdit = async (id) => {
+    try {
+      const shipmentDoc = doc(db, 'shipments', id);
+      const docSnap = await getDoc(shipmentDoc);
+      if (docSnap.exists()) {
+        setFormData(docSnap.data());
+        setEditingShipment(docSnap.data());
+      } else {
+        console.log('No such document!');
+      }
+    } catch (error) {
+      console.error('Error fetching shipment for edit:', error);
+    }
   };
 
   // Filter shipments based on filters and search term
