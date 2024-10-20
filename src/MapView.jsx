@@ -350,7 +350,7 @@ const MapView = () => {
             attribution="&copy; OpenStreetMap contributors"
           />
 
-          {filteredShipments.map((shipment) => (
+          {shipments.map((shipment) => (
             <React.Fragment key={shipment.id}>
               {/* Start Marker */}
               <Marker
